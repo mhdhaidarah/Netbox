@@ -103,9 +103,14 @@ sudo cp -v /opt/netbox/contrib/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now netbox netbox-rq
 
-sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+
+#######Change IP Address
+sudo openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
 -keyout /etc/ssl/private/netbox.key \
--out /etc/ssl/certs/netbox.crt
+-out /etc/ssl/certs/netbox.crt \
+-subj "/CN=<IP ADDRESS>" \
+-addext "subjectAltName = IP:<IP ADDRESS>"
+
 
 sudo apt install -y nginx
 sudo cp /opt/netbox/contrib/nginx.conf /etc/nginx/sites-available/netbox
@@ -123,8 +128,19 @@ source venv/bin/activate
 
 pip install -r requirements.txt
 cp .env.example .env
-#Now Setup URL http://127.0.0.1 & Token the token can be generated from GUI users
+#Now Setup URL http://127.0.0.1 & Token the token can be generated from GUI users V1 Must Be
+#EXAMPLE
+NETBOX_URL=https://127.0.0.1
+NETBOX_TOKEN=LE0GCreKBP0v3jbXauWLVqbmzKtH3BnhI1Z184TV
+REPO_URL=https://github.com/netbox-community/devicetype-library.git
+REPO_BRANCH=master
+IGNORE_SSL_ERRORS=True
+#REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt # you should enable this if you are running on a linux sys>
+#SLUGS=c9300-48u isr4431 isr4331
+
+
 sudo nano /opt/Device-Type-Library-Import/.env
+git clone https://github.com/netbox-community/devicetype-library.git /home/netbox/Device-Type-Library-Import/repo
 
 
 ######## Select Vendors or download all
