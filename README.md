@@ -116,7 +116,8 @@ python3 manage.py createsuperuser
 python3 manage.py runserver 0.0.0.0:8000 --insecure
 ```
 
-#######Convert To Service Using Nginx
+## Convert To Service Using Nginx
+```bash
 sudo cp /opt/netbox/contrib/gunicorn.py /opt/netbox/gunicorn.py
 sudo cp -v /opt/netbox/contrib/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
@@ -132,24 +133,27 @@ sudo cp /opt/netbox/contrib/uwsgi.ini /opt/netbox/uwsgi.ini
 sudo cp -v /opt/netbox/contrib/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now netbox netbox-rq
+```
 
-
-#######Change IP Address
+## Change IP Address
+```bash
 sudo openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
 -keyout /etc/ssl/private/netbox.key \
 -out /etc/ssl/certs/netbox.crt \
 -subj "/CN=<IP ADDRESS>" \
 -addext "subjectAltName = IP:<IP ADDRESS>"
-
-
+```
+## Install Nginx
+```bash
 sudo apt install -y nginx
 sudo cp /opt/netbox/contrib/nginx.conf /etc/nginx/sites-available/netbox
 sudo rm /etc/nginx/sites-enabled/default
 sudo ln -s /etc/nginx/sites-available/netbox /etc/nginx/sites-enabled/netbox
 sudo systemctl restart nginx
+```
 
-#######Import Devices
-
+## Import Devices Library
+```bash
 sudo su
 git clone https://github.com/netbox-community/Device-Type-Library-Import.git
 cd Device-Type-Library-Import
@@ -158,8 +162,11 @@ source venv/bin/activate
 
 pip install -r requirements.txt
 cp .env.example .env
-#Now Setup URL http://127.0.0.1 & Token the token can be generated from GUI users V1 Must Be
-#EXAMPLE
+```
+
+## Now Setup URL http://127.0.0.1 & Token the token can be generated from GUI users V1 Must Be
+## EXAMPLE
+```bash
 NETBOX_URL=https://127.0.0.1
 NETBOX_TOKEN=LE0GCreKBP0v3jbXauWLVqbmzKtH3BnhI1Z184TV
 REPO_URL=https://github.com/netbox-community/devicetype-library.git
@@ -167,25 +174,38 @@ REPO_BRANCH=master
 IGNORE_SSL_ERRORS=True
 #REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt # you should enable this if you are running on a linux sys>
 #SLUGS=c9300-48u isr4431 isr4331
-
-
+```
+## Update Here
+```bash
 sudo nano /opt/Device-Type-Library-Import/.env
-git clone https://github.com/netbox-community/devicetype-library.git /home/netbox/Device-Type-Library-Import/repo
+```
+## Install Device Library Importer
+```bash
+git clone https://github.com/netbox-community/devicetype-library.git ~/Device-Type-Library-Import/repo
+```
 
-
-######## Select Vendors or download all
+## Select Vendors or download all
+```bash
 ./nb-dt-import.py
-OR
+```
+## OR
+```bash
 ./nb-dt-import.py --vendors mikrotik,ubiquiti
+```
 
-
-########Important Plugins
+## Important Plugins
+```bash
 source /opt/netbox/venv/bin/activate
 pip install netbox-napalm-plugin
 pip3 install netbox-topology-views
 pip install netbox-qrcode
 pip install netbox-reorder-rack
-
+```
+## Update configuration.py 
+```bash
+sudo nano /opt/netbox/netbox/netbox/configuration.py
+```
+```bash
 PLUGINS = [
     'netbox_napalm_plugin','netbox_topology_views','netbox_qrcode','netbox_reorder_rack'
      
@@ -196,7 +216,9 @@ PLUGINS_CONFIG = {
         'NAPALM_PASSWORD': 'yyy',
     },
 }
-
+```
+## Do Database migration
+```bash
 cd /opt/netbox/netbox/
 python3 manage.py migrate
 python3 manage.py migrate netbox_topology_views
@@ -206,6 +228,6 @@ echo netbox-topology-views >> /opt/netbox/local_requirements.txt
 echo netbox-reorder-rack >> local_requirements.txt
 
 sudo systemctl restart netbox
-
+```
 
 
