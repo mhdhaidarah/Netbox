@@ -4,6 +4,21 @@
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mhdhaidarah/Netbox/main/install-netbox.sh | sudo bash
 ```
+### Backup
+```bash
+curl -fsSL https://raw.githubusercontent.com/mhdhaidarah/Netbox/main/backup-netbox.sh | sudo bash
+```
+
+### Restore
+```bash
+curl -fsSL https://raw.githubusercontent.com/mhdhaidarah/Netbox/main/restore-netbox.sh | sudo bash
+```
+
+### Restore from file
+```bash
+curl -fsSL https://raw.githubusercontent.com/mhdhaidarah/Netbox/main/restore-netbox.sh | sudo bash -s -- "/file/directory/name.tar.gz"
+```
+
 ## Option B Manual Install
 
 ### Update
