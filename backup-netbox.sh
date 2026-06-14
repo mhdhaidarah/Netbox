@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 #==============================================================================
-# NetBox one-command BACKUP
+# NetBox one-command BACKUP  (data only - portable across machines)
+#
 #   - Dumps the PostgreSQL "netbox" database (compressed custom format)
-#   - Also saves configuration.py and the uploaded media files
-#   - Everything goes into one timestamped .tar.gz in /opt/netbox-backups
-#   - Keeps the most recent 14 backups, deletes older ones
+#   - Also saves the uploaded media files
+#   - Does NOT save configuration.py (no SECRET_KEY / DB password in the backup,
+#     so it is safe to copy and restore onto a different machine)
+#   - One timestamped .tar.gz in /opt/netbox-backups, keeps the last 14
 #
 # Run as root:   sudo bash backup-netbox.sh
 #==============================================================================
@@ -33,9 +35,6 @@ mkdir -p "${BACKUP_DIR}"
 echo "==> Dumping database '${DB_NAME}'"
 sudo -u postgres pg_dump -Fc "${DB_NAME}" > "${WORK}/database.dump"
 
-echo "==> Saving configuration.py"
-[[ -f "${CONF}" ]] && cp "${CONF}" "${WORK}/configuration.py" || true
-
 echo "==> Saving media files"
 if [[ -d "${NETBOX_DIR}/netbox/media" ]]; then
   tar -czf "${WORK}/media.tar.gz" -C "${NETBOX_DIR}/netbox" media
@@ -53,5 +52,6 @@ SIZE="$(du -h "${ARCHIVE}" | cut -f1)"
 echo
 echo "======================================================================"
 echo "  Backup complete:  ${ARCHIVE}  (${SIZE})"
+echo "  Contains:         database + media (no credentials)"
 echo "  Restore with:     sudo bash restore-netbox.sh ${ARCHIVE}"
 echo "======================================================================"
