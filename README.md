@@ -6,17 +6,17 @@ curl -fsSL https://raw.githubusercontent.com/mhdhaidarah/Netbox/main/install-net
 ```
 ## Option B Manual Install
 
-## Update
+### Update
 ```bash
 sudo apt update
 sudo apt install -y PostgreSQL
 ```
 
-## Create Database with user
+### Create Database with user
 ```bash
 sudo -u postgres psql
 ```
-## Inside PSQL
+### Inside PSQL
 ```bash
 CREATE DATABASE netbox;
 CREATE USER netbox WITH PASSWORD 'J5brHrAXFLQSif0K';
@@ -24,24 +24,24 @@ ALTER DATABASE netbox OWNER TO netbox;
 \q
 ```
 
-## Test Postgres
+### Test Postgres
 ```bash
 psql --username netbox --password --host localhost netbox
 ```
 
-## Install Redis
+### Install Redis
 ```bash
 sudo apt install -y redis-server
 ```
 
-## Install Needed Software
+### Install Needed Software
 ```bash
 sudo apt install -y python3 python3-pip python3-venv python3-dev \
 build-essential libxml2-dev libxslt1-dev libffi-dev libpq-dev \
 libssl-dev zlib1g-dev
 ```
 
-## Install Netbox
+### Install Netbox
 ```bash
 sudo mkdir -p /opt/netbox/
 cd /opt/netbox/
@@ -54,22 +54,22 @@ sudo chown --recursive netbox /opt/netbox/netbox/reports/
 sudo chown --recursive netbox /opt/netbox/netbox/scripts/
 ```
 
-## Update Config File
+### Update Config File
 ```bash
 cd /opt/netbox/netbox/netbox/
 sudo cp configuration_example.py configuration.py
 ```
 
-## Generate Key with
+### Generate Key with
 ```bash
 python3 ../generate_secret_key.py
 ```
 
-## Add These to the file
+### Add These to the file
 ```bash
 sudo nano /opt/netbox/netbox/netbox/configuration.py
 ```
-## Final file configuration.py
+### Final file configuration.py
 ```bash
 ALLOWED_HOSTS = ['*']
 
@@ -103,12 +103,12 @@ PLUGINS = [
 #Save and Exit
 ```
 
-## Final Step to Install Netbox
+### Final Step to Install Netbox
 ```bash
 sudo /opt/netbox/upgrade.sh
 ```
 
-## Create Super User
+### Create Super User
 ```bash
 source /opt/netbox/venv/bin/activate
 cd /opt/netbox/netbox
@@ -117,12 +117,12 @@ python3 manage.py createsuperuser
 
 
 ## First Test
-## Access using http://<server_ip>:8000
+### Access using http://<server_ip>:8000
 ```bash
 python3 manage.py runserver 0.0.0.0:8000 --insecure
 ```
 
-## Convert To Service Using Nginx
+### Convert To Service Using Nginx
 ```bash
 sudo cp /opt/netbox/contrib/gunicorn.py /opt/netbox/gunicorn.py
 sudo cp -v /opt/netbox/contrib/*.service /etc/systemd/system/
@@ -141,7 +141,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now netbox netbox-rq
 ```
 
-## Change IP Address
+### Change IP Address
 ```bash
 sudo openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
 -keyout /etc/ssl/private/netbox.key \
@@ -149,7 +149,7 @@ sudo openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
 -subj "/CN=<IP ADDRESS>" \
 -addext "subjectAltName = IP:<IP ADDRESS>"
 ```
-## Install Nginx
+### Install Nginx
 ```bash
 sudo apt install -y nginx
 sudo cp /opt/netbox/contrib/nginx.conf /etc/nginx/sites-available/netbox
@@ -158,8 +158,8 @@ sudo ln -s /etc/nginx/sites-available/netbox /etc/nginx/sites-enabled/netbox
 sudo systemctl restart nginx
 ```
 
-# Optional
-## Import Devices Library
+## Optional
+### Import Devices Library
 ```bash
 sudo apt update && sudo apt install -y python3 python3-pip python3-venv python3-dev build-essential libssl-dev libffi-dev libsqlite3-dev wget curl git
 git clone https://github.com/netbox-community/Device-Type-Library-Import.git
@@ -171,8 +171,8 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-## Now Setup URL to the NetBox Server & Token the token can be generated from GUI Users and select V1
-## EXAMPLE
+### Now Setup URL to the NetBox Server & Token the token can be generated from GUI Users and select V1
+### EXAMPLE
 ```bash
 NETBOX_URL=https://192.168.0.100:8000
 NETBOX_TOKEN=LE0GCreKBP0v3jbXauWLVqbmzKtH3BnhI1Z184TV
@@ -182,25 +182,25 @@ IGNORE_SSL_ERRORS=True
 #REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt # you should enable this if you are running on a linux sys>
 #SLUGS=c9300-48u isr4431 isr4331
 ```
-## Update Here
+### Update Here
 ```bash
 sudo nano .env
 ```
-## Install Device Library Importer
+### Install Device Library Importer
 ```bash
 git clone https://github.com/netbox-community/devicetype-library.git ~/Device-Type-Library-Import/repo
 ```
 
-## Select Vendors or download all
+### Select Vendors or download all
 ```bash
 ./nb-dt-import.py
 ```
-## OR
+### OR
 ```bash
 ./nb-dt-import.py --vendors mikrotik,ubiquiti
 ```
 
-## Important Plugins
+### Important Plugins
 ```bash
 source /opt/netbox/venv/bin/activate
 pip install netbox-napalm-plugin
@@ -208,7 +208,7 @@ pip3 install netbox-topology-views
 pip install netbox-qrcode
 pip install netbox-reorder-rack
 ```
-## Update configuration.py 
+### Update configuration.py 
 ```bash
 sudo nano /opt/netbox/netbox/netbox/configuration.py
 ```
@@ -224,7 +224,7 @@ PLUGINS_CONFIG = {
     },
 }
 ```
-## Do Database migration
+### Do Database migration
 ```bash
 cd /opt/netbox/netbox/
 python3 manage.py migrate
