@@ -66,17 +66,22 @@ source "${NETBOX_DIR}/venv/bin/activate"
 # 1. Capture THIS machine's superuser logins (before we drop the database)
 #------------------------------------------------------------------------------
 echo "==> Capturing current super admin login(s)"
-python3 "${MANAGE}" shell <<PYEOF || echo "   (no live DB to read - will rely on backup)"
+if ! python3 "${MANAGE}" shell <<PYEOF
 import json
 from django.contrib.auth import get_user_model
 U = get_user_model()
 rows = [{
     'username': u.username, 'password': u.password, 'email': u.email,
-    'is_staff': u.is_staff, 'is_active': u.is_active,
+    'is_active': u.is_active,
 } for u in U.objects.filter(is_superuser=True)]
 open('${SU_CACHE}', 'w').write(json.dumps(rows))
 print('Captured %d superuser login(s)' % len(rows))
 PYEOF
+then
+  echo "ERROR: could not read current superusers. Aborting BEFORE any change." >&2
+  echo "       (Nothing was dropped or restored.)" >&2
+  exit 1
+fi
 
 WORK="$(mktemp -d)"
 trap 'rm -rf "${WORK}"' EXIT
@@ -125,7 +130,7 @@ rows = json.load(open(path)) if os.path.exists(path) else []
 for r in rows:
     u, _ = U.objects.update_or_create(
         username=r['username'],
-        defaults={'email': r['email'], 'is_staff': r['is_staff'],
+        defaults={'email': r['email'],
                   'is_active': r['is_active'], 'is_superuser': True},
     )
     u.password = r['password']   # exact hash -> same password keeps working
