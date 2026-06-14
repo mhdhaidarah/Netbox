@@ -7,7 +7,7 @@
 #   - Installs PostgreSQL, Redis, and all build dependencies
 #   - Creates the netbox database + user (random password)
 #   - Clones NetBox (latest stable release) into /opt/netbox
-#   - Writes configuration.py with an auto-generated SECRET_KEY
+#   - Writes configuration.py with auto-generated SECRET_KEY + API pepper
 #   - Runs upgrade.sh (creates venv, installs deps, migrates, collectstatic)
 #   - Creates an admin superuser (random password) + an API token
 #   - Sets up gunicorn + systemd services (netbox, netbox-rq)
@@ -99,6 +99,7 @@ chown --recursive netbox "${NETBOX_DIR}/netbox/scripts/" 2>/dev/null || true
 #------------------------------------------------------------------------------
 log "Writing configuration.py"
 SECRET_KEY="$(python3 "${NETBOX_DIR}/netbox/generate_secret_key.py")"
+API_PEPPER="$(python3 "${NETBOX_DIR}/netbox/generate_secret_key.py")"
 CONF="${NETBOX_DIR}/netbox/netbox/configuration.py"
 
 cat > "${CONF}" <<PYCONF
@@ -137,6 +138,10 @@ REDIS = {
 
 SECRET_KEY = '${SECRET_KEY}'
 
+API_TOKEN_PEPPERS = {
+    1: '${API_PEPPER}',
+}
+
 PLUGINS = [
     'netbox_qrcode',
     'netbox_reorder_rack',
@@ -165,22 +170,26 @@ log "Creating admin superuser and API token"
 source "${NETBOX_DIR}/venv/bin/activate"
 cd "${NETBOX_DIR}/netbox"
 
-export DJANGO_SUPERUSER_USERNAME="${ADMIN_USER}"
-export DJANGO_SUPERUSER_EMAIL="${ADMIN_EMAIL}"
-export DJANGO_SUPERUSER_PASSWORD="${ADMIN_PASSWORD}"
-python3 manage.py createsuperuser --noinput 2>/dev/null || \
-  echo "   (superuser already exists, continuing)"
-
-python3 manage.py shell <<PYSHELL || true
-from django.contrib.auth import get_user_model
-try:
-    from users.models import Token
-except Exception:
-    from netbox.api.tokens import Token  # fallback for older layouts
+# Create-or-update the superuser directly via the ORM (idempotent and
+# guaranteed to set the password). Does NOT rely on createsuperuser, which
+# can fail silently and leave you unable to log in.
+python3 manage.py shell <<PYSHELL
+from django.contrib.auth import get_user_model, authenticate
+from users.models import Token
 U = get_user_model()
-u = U.objects.get(username='${ADMIN_USER}')
+u, created = U.objects.get_or_create(
+    username='${ADMIN_USER}',
+    defaults={'email': '${ADMIN_EMAIL}'},
+)
+u.is_staff = True
+u.is_superuser = True
+u.is_active = True
+u.set_password('${ADMIN_PASSWORD}')
+u.save()
 Token.objects.get_or_create(user=u, defaults={'key': '${API_TOKEN}'})
-print("token-ok")
+ok = authenticate(username='${ADMIN_USER}', password='${ADMIN_PASSWORD}')
+print('Superuser ' + ('created' if created else 'updated') + ': ${ADMIN_USER}')
+print('Auth self-test: ' + ('PASS' if ok else 'FAIL'))
 PYSHELL
 
 #------------------------------------------------------------------------------
