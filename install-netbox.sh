@@ -186,10 +186,23 @@ u.is_superuser = True
 u.is_active = True
 u.set_password('${ADMIN_PASSWORD}')
 u.save()
-Token.objects.get_or_create(user=u, defaults={'key': '${API_TOKEN}'})
 ok = authenticate(username='${ADMIN_USER}', password='${ADMIN_PASSWORD}')
 print('Superuser ' + ('created' if created else 'updated') + ': ${ADMIN_USER}')
 print('Auth self-test: ' + ('PASS' if ok else 'FAIL'))
+
+# Create a LEGACY v1 API token for the device-library importer.
+# Newer NetBox defaults to v2 tokens (key column is only 12 chars and the auth
+# header is "Bearer netbox_..."), which pynetbox-based tools don't expect.
+# A v1 token stores the plain 40-char value and works with "Token <value>".
+# Wrapped so a token problem can never abort the install or block login.
+try:
+    if not Token.objects.filter(user=u).exists():
+        Token(user=u, version=1, token='${API_TOKEN}').save()
+        print('API token created (v1)')
+    else:
+        print('API token already exists - skipping')
+except Exception as e:
+    print('WARNING: could not create API token:', e)
 PYSHELL
 
 #------------------------------------------------------------------------------
