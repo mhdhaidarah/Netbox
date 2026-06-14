@@ -1,9 +1,10 @@
 # Install Docker
 
-## One Command Install
+## Option A One Command Install
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mhdhaidarah/Netbox/main/install-netbox.sh | sudo bash
 ```
+## Option B Manual Install
 
 ## Update
 ```bash
