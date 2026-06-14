@@ -105,7 +105,9 @@ CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};
 SQL
 
 echo "==> Restoring database (ownership notices on plpgsql are harmless)"
-sudo -u postgres pg_restore -d "${DB_NAME}" "${WORK}/database.dump" || true
+# Feed the dump on stdin (opened by root) so the postgres user doesn't need
+# read access to root's private temp dir -> avoids "Permission denied".
+sudo -u postgres pg_restore -d "${DB_NAME}" < "${WORK}/database.dump" || true
 
 echo "==> Restoring media files"
 if [[ -f "${WORK}/media.tar.gz" ]]; then
